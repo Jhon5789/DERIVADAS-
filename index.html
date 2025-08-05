@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Derivada por Definición (Límite)</title>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -46,7 +48,7 @@
     button:hover {
       background-color: #073a7a;
     }
-    #resultado, #pasos {
+    #resultado, #pasos, #latex {
       background: white;
       border-radius: 8px;
       box-shadow: 0 0 8px rgb(0 0 0 / 0.1);
@@ -78,6 +80,9 @@
 
 <button id="calcularBtn">Calcular derivada por definición</button>
 
+<h2>Expresión formal</h2>
+<div id="latex">\[ f'(x) = \lim_{h \to 0} \frac{f(x+h) - f(x)}{h} \]</div>
+
 <h2>Resultado simbólico</h2>
 <div id="resultado">Aquí se mostrará la derivada simbólica...</div>
 
@@ -87,7 +92,7 @@
 <h2>Gráfica de la función y su derivada</h2>
 <div id="grafica"></div>
 
-<footer>Derivación por definición con ❤️ usando Nerdamer y Plotly</footer>
+<footer>Derivación por definición con ❤️ usando Nerdamer, Plotly y MathJax</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/nerdamer@1.1.13/all.min.js"></script>
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
@@ -96,6 +101,7 @@
   const funcionInput = document.getElementById('funcion');
   const resultadoDiv = document.getElementById('resultado');
   const pasosDiv = document.getElementById('pasos');
+  const latexDiv = document.getElementById('latex');
   const calcularBtn = document.getElementById('calcularBtn');
   const graficaDiv = document.getElementById('grafica');
 
@@ -149,7 +155,8 @@ f(x+h) - f(x) = ${diferencia.text()}
 [f(x+h) - f(x)] / h = ${cociente.text()}
 Límite cuando h → 0 = ${limite.text()}`,
         derivada: limite.text(),
-        original: f_x.text()
+        original: f_x.text(),
+        latex: `f'(x) = \\lim_{h\\to0} \\frac{${f_xh.text().replace(/\*/g,'')} - ${f_x.text().replace(/\*/g,'')}}{h} = ${limite.text().replace(/\*/g,'')}`
       };
     } catch (e) {
       console.error(e);
@@ -170,6 +177,8 @@ Límite cuando h → 0 = ${limite.text()}`,
     if (resultado) {
       resultadoDiv.textContent = resultado.resultado;
       pasosDiv.textContent = resultado.pasos;
+      latexDiv.innerHTML = `\\[ ${resultado.latex} \\]`;
+      MathJax.typesetPromise();
       graficar(resultado.original, resultado.derivada);
     } else {
       resultadoDiv.textContent = 'Error al calcular.';
