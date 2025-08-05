@@ -4,153 +4,45 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Calculadora Completa de Derivadas Mejorada</title>
-
-  <!-- MathJax para fórmulas matemáticas -->
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script id="MathJax-script" async
-    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-
-  <!-- Nerdamer para cálculo simbólico -->
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/nerdamer@1.1.13/all.min.js"></script>
-
-  <!-- Plotly para graficar -->
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-
   <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      max-width: 720px;
-      margin: 2rem auto;
-      padding: 0 1rem;
-      background: #f9f9f9;
-      color: #222;
-      line-height: 1.5;
-    }
-    h1, h2 {
-      text-align: center;
-      color: #0a47a1;
-    }
-    label {
-      font-weight: 600;
-      margin-bottom: 0.3rem;
-      display: block;
-    }
-    textarea {
-      width: 100%;
-      height: 80px;
-      font-size: 1.1rem;
-      padding: 0.5rem;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      resize: vertical;
-      margin-bottom: 1rem;
-      font-family: Consolas, monospace;
-    }
-    button {
-      display: block;
-      margin: 1rem auto 2rem;
-      padding: 0.7rem 2.5rem;
-      font-size: 1.1rem;
-      background-color: #0a47a1;
-      border: none;
-      border-radius: 8px;
-      color: white;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-    button:hover {
-      background-color: #073a7a;
-    }
-    section {
-      background: white;
-      border-radius: 10px;
-      padding: 1rem 1.5rem;
-      margin-bottom: 2rem;
-      box-shadow: 0 0 10px rgb(0 0 0 / 0.1);
-    }
-    #resultado, #pasos, #pasosCorto, #latex, #latexDefinicion {
-      white-space: pre-wrap;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      min-height: 100px;
-      margin-top: 0.5rem;
-      color: #333;
-      background: #f5f8ff;
-      padding: 1rem;
-      border-radius: 8px;
-      box-shadow: inset 0 0 6px rgb(0 0 0 / 0.05);
-      font-size: 1rem;
-    }
-    #grafica {
-      width: 100%;
-      height: 400px;
-      margin-top: 1rem;
-    }
-    footer {
-      text-align: center;
-      color: #666;
-      font-size: 0.9rem;
-      margin-top: 3rem;
-      margin-bottom: 1rem;
-    }
-    /* Destacar pasos */
-    .step {
-      margin-bottom: 1rem;
-      border-left: 4px solid #0a47a1;
-      padding-left: 0.8rem;
-      background: #e9f0ff;
-      border-radius: 4px;
-    }
-    .term {
-      font-weight: 600;
-      color: #0a47a1;
-    }
-    .formula {
-      margin-top: 0.2rem;
-      font-style: italic;
-      color: #444;
-    }
+    body { font-family: 'Segoe UI', sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; background: #f9f9f9; color: #222; line-height: 1.5; }
+    h1, h2 { text-align: center; color: #0a47a1; }
+    label { font-weight: 600; margin-bottom: 0.3rem; display: block; }
+    textarea { width: 100%; height: 80px; font-size: 1.1rem; padding: 0.5rem; border-radius: 6px; border: 1px solid #ccc; margin-bottom: 1rem; font-family: Consolas, monospace; }
+    button { display: block; margin: 1rem auto 2rem; padding: 0.7rem 2.5rem; font-size: 1.1rem; background-color: #0a47a1; border: none; border-radius: 8px; color: white; cursor: pointer; }
+    section { background: white; border-radius: 10px; padding: 1rem 1.5rem; margin-bottom: 2rem; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    .step { margin-bottom: 1rem; border-left: 4px solid #0a47a1; padding-left: 0.8rem; background: #e9f0ff; border-radius: 4px; }
+    .term { font-weight: 600; color: #0a47a1; }
+    .formula { margin-top: 0.2rem; font-style: italic; color: #444; }
+    #grafica { width: 100%; height: 400px; margin-top: 1rem; }
+    footer { text-align: center; color: #666; font-size: 0.9rem; margin-top: 3rem; margin-bottom: 1rem; }
   </style>
 </head>
 <body>
-
   <h1>Calculadora Completa de Derivadas Mejorada</h1>
-
   <section>
     <label for="funcion">Ingrese la función \(f(x)\):</label>
-    <textarea id="funcion" placeholder="Ejemplo: sin(x)*x^2 + ln(x)/x"></textarea>
+    <textarea id="funcion" placeholder="Ejemplo: x^2 + sin(x)"></textarea>
     <button id="calcularBtn">Calcular Derivadas</button>
   </section>
-
   <section>
-    <h2>Definición formal de la derivada</h2>
-    <div id="latexDefinicion">
-      \\[
-      f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h}
-      \\]
-      <p style="font-style: italic; color:#555; max-width: 600px; margin: 0.5rem auto;">
-        Esta expresión indica que la derivada en \( x \) es el límite del cociente incremental cuando \( h \) se acerca a cero, es decir, la pendiente instantánea de la curva en ese punto.
-      </p>
-    </div>
-  </section>
-
-  <section>
-    <h2>Derivada método corto (reglas directas) con paso a paso</h2>
+    <h2>Método corto</h2>
     <div id="resultado"></div>
     <div id="pasosCorto"></div>
   </section>
-
   <section>
-    <h2>Derivada por definición (método largo) - Procedimiento paso a paso</h2>
+    <h2>Método largo (definición)</h2>
     <div id="pasos"></div>
   </section>
-
   <section>
     <h2>Gráfica de \(f(x)\) y \(f'(x)\)</h2>
     <div id="grafica"></div>
   </section>
-
   <footer>Calculadora creada con ❤️ usando Nerdamer, Plotly y MathJax</footer>
-
   <script>
     const funcionInput = document.getElementById('funcion');
     const pasosDiv = document.getElementById('pasos');
@@ -158,30 +50,16 @@
     const pasosCortoDiv = document.getElementById('pasosCorto');
     const graficaDiv = document.getElementById('grafica');
 
-    // Normalizar entrada para nerdamer
     function normalizarEntrada(expr) {
-      return expr
-        .replace(/ln/g, 'log')
-        .replace(/√/g, 'sqrt')
-        .replace(/(\\d)([a-zA-Z])/g, '$1*$2')
-        .replace(/([a-zA-Z])(\\d)/g, '$1*$2')
-        .replace(/--/g, '+');
+      return expr.replace(/ln/g, 'log').replace(/√/g, 'sqrt').replace(/(\d)([a-zA-Z])/g, '$1*$2').replace(/([a-zA-Z])(\d)/g, '$1*$2').replace(/--/g, '+');
     }
 
-    // Evaluar expresión en x numérico
     function evaluarEn(expr, x) {
-      try {
-        return parseFloat(nerdamer(expr, { x }).evaluate().text());
-      } catch {
-        return NaN;
-      }
+      try { return parseFloat(nerdamer(expr, { x }).evaluate().text()); } catch { return NaN; }
     }
 
-    // Graficar función y derivada
     function graficar(f, df) {
-      const xs = [];
-      const ys = [];
-      const dys = [];
+      const xs = [], ys = [], dys = [];
       for (let x = -10; x <= 10; x += 0.1) {
         xs.push(x);
         ys.push(evaluarEn(f, x));
@@ -191,40 +69,27 @@
         { x: xs, y: ys, name: 'f(x)', mode: 'lines', line: { color: '#1f77b4' } },
         { x: xs, y: dys, name: "f'(x)", mode: 'lines', line: { color: '#ff7f0e' } }
       ], {
-        title: 'Gráfica de la función y su derivada',
-        xaxis: { title: 'x' },
-        yaxis: { title: 'y' },
-        responsive: true
+        title: 'Gráfica de la función y su derivada', xaxis: { title: 'x' }, yaxis: { title: 'y' }, responsive: true
       });
     }
 
-    // Método corto con pasos
     function derivadaCortaConPasos(expr) {
       try {
         const derivada = nerdamer(`diff(${expr}, x)`).expand();
-
         const sumas = expr.split(/(?=[+-])/).map(s => s.trim()).filter(s => s !== '');
         let pasos = '';
-
         sumas.forEach((termino, i) => {
           try {
             const derivTermino = nerdamer(`diff(${termino}, x)`).expand().text();
-            pasos += `<div class="step"><span class="term">Derivar término ${i + 1}:</span> \\(${termino}\\) &rarr; \\(${derivTermino}\\)</div>`;
+            pasos += `<div class="step"><span class="term">Término ${i + 1}:</span> \\(${termino}\\) &rarr; \\(${derivTermino}\\)</div>`;
           } catch {
-            pasos += `<div class="step"><span class="term">Derivar término ${i + 1}:</span> \\(${termino}\\) &rarr; Error</div>`;
+            pasos += `<div class="step"><span class="term">Término ${i + 1}:</span> \\(${termino}\\) &rarr; Error</div>`;
           }
         });
-
-        return {
-          resultado: derivada.text(),
-          pasosHtml: pasos
-        };
-      } catch {
-        return null;
-      }
+        return { resultado: derivada.text(), pasosHtml: pasos };
+      } catch { return null; }
     }
 
-    // Método largo con pasos y explicación detallada con límite
     function derivadaPorDefinicionDetallada(expr) {
       try {
         const f_x = nerdamer(expr);
@@ -232,55 +97,16 @@
         const f_xh = nerdamer(f_xh_expr).expand();
         const diferencia = nerdamer(`(${f_xh.text()}) - (${f_x.text()})`).expand();
         const cociente = nerdamer(`(${diferencia.text()}) / h`).expand();
-
-        // Límite no siempre funciona bien, pero probamos
         let limiteText;
-        try {
-          limiteText = nerdamer(`limit((${cociente.text()}), h, 0)`).text();
-        } catch {
-          limiteText = 'No se pudo calcular el límite automáticamente';
-        }
-
-        // Creamos pasos explicativos y en formato LaTeX para mostrar bien
-        const pasos = [
-          {
-            descripcion: 'Función original:',
-            formula: `f(x) = ${f_x.text()}`
-          },
-          {
-            descripcion: 'Función desplazada \( f(x+h) \):',
-            formula: `f(x+h) = ${f_xh.text()}`
-          },
-          {
-            descripcion: 'Diferencia \( f(x+h) - f(x) \):',
-            formula: `${diferencia.text()}`
-          },
-          {
-            descripcion: 'Cociente \(\frac{f(x+h) - f(x)}{h}\):',
-            formula: `\\frac{${diferencia.text()}}{h}`
-          },
-          {
-            descripcion: 'Límite cuando \( h \\to 0 \):',
-            formula: limiteText
-          }
-        ];
-
-        // Construir html con pasos y render LaTeX con MathJax
-        let pasosHtml = '';
-        pasos.forEach(({ descripcion, formula }) => {
-          pasosHtml += `<div class="step">
-            <span class="term">${descripcion}</span>
-            <div class="formula">\\[${formula}\\]</div>
-          </div>`;
-        });
-
-        return {
-          resultado: limiteText,
-          pasosHtml: pasosHtml
-        };
-      } catch {
-        return null;
-      }
+        try { limiteText = nerdamer(`limit((${cociente.text()}), h, 0)`).text(); } catch { limiteText = 'No se pudo calcular el límite'; }
+        let pasosHtml = `
+        <div class="step"><span class="term">Paso 1: Función original:</span><div class="formula">\\[f(x) = ${f_x.text()}\\]<br>\\[\\lim_{h \to 0} f(x) = ${f_x.text()}\\]</div></div>
+        <div class="step"><span class="term">Paso 2: Evaluar f(x+h):</span><div class="formula">\\[f(x+h) = ${f_xh.text()}\\]<br>\\[\\lim_{h \to 0} f(x+h) = ${f_xh.text()}\\]</div></div>
+        <div class="step"><span class="term">Paso 3: Diferencia f(x+h) - f(x):</span><div class="formula">\\[f(x+h) - f(x) = ${diferencia.text()}\\]<br>\\[\\lim_{h \to 0} (f(x+h) - f(x)) = ${diferencia.text()}\\]</div></div>
+        <div class="step"><span class="term">Paso 4: Cociente incremental:</span><div class="formula">\\[\\frac{f(x+h) - f(x)}{h} = ${cociente.text()}\\]<br>\\[\\lim_{h \to 0} \\frac{f(x+h) - f(x)}{h} = ${limiteText}\\]</div></div>
+        <div class="step"><span class="term">Paso 5: Resultado final:</span><div class="formula">\\[f'(x) = ${limiteText}\\]</div></div>`;
+        return { resultado: limiteText, pasosHtml };
+      } catch { return null; }
     }
 
     function calcular() {
@@ -288,41 +114,24 @@
       resultadoDiv.textContent = '';
       pasosCortoDiv.innerHTML = '';
       graficaDiv.innerHTML = '';
-
       const input = funcionInput.value.trim();
-      if (!input) {
-        alert('Por favor ingresa una función.');
-        return;
-      }
+      if (!input) return alert('Por favor ingresa una función.');
       const expr = normalizarEntrada(input);
-
-      // Método corto con pasos
       const corto = derivadaCortaConPasos(expr);
       if (corto) {
         resultadoDiv.textContent = `Derivada simplificada: ${corto.resultado}`;
         pasosCortoDiv.innerHTML = corto.pasosHtml;
         MathJax.typesetPromise();
-      } else {
-        resultadoDiv.textContent = 'Error al calcular derivada (método corto).';
       }
-
-      // Método largo (definición) con pasos detallados y explicados
       const def = derivadaPorDefinicionDetallada(expr);
       if (def) {
         pasosDiv.innerHTML = def.pasosHtml;
         MathJax.typesetPromise();
-      } else {
-        pasosDiv.textContent = 'Error al calcular derivada por definición.';
       }
-
-      // Graficar
-      if (def && corto) {
-        graficar(expr, corto.resultado);
-      }
+      if (def && corto) graficar(expr, corto.resultado);
     }
 
     document.getElementById('calcularBtn').addEventListener('click', calcular);
   </script>
-
 </body>
 </html>
