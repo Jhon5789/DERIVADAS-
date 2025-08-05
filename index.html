@@ -94,7 +94,7 @@
     }
     /* Destacar pasos */
     .step {
-      margin-bottom: 0.8rem;
+      margin-bottom: 1rem;
       border-left: 4px solid #0a47a1;
       padding-left: 0.8rem;
       background: #e9f0ff;
@@ -103,6 +103,11 @@
     .term {
       font-weight: 600;
       color: #0a47a1;
+    }
+    .formula {
+      margin-top: 0.2rem;
+      font-style: italic;
+      color: #444;
     }
   </style>
 </head>
@@ -117,10 +122,15 @@
   </section>
 
   <section>
-    <h2>Expresión formal (definición de derivada)</h2>
-    <div id="latexDefinicion">\\[
+    <h2>Definición formal de la derivada</h2>
+    <div id="latexDefinicion">
+      \\[
       f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h}
-    \\]</div>
+      \\]
+      <p style="font-style: italic; color:#555; max-width: 600px; margin: 0.5rem auto;">
+        Esta expresión indica que la derivada en \( x \) es el límite del cociente incremental cuando \( h \) se acerca a cero, es decir, la pendiente instantánea de la curva en ese punto.
+      </p>
+    </div>
   </section>
 
   <section>
@@ -130,7 +140,7 @@
   </section>
 
   <section>
-    <h2>Derivada por definición (límite) - Procedimiento paso a paso</h2>
+    <h2>Derivada por definición (método largo) - Procedimiento paso a paso</h2>
     <div id="pasos"></div>
   </section>
 
@@ -188,25 +198,20 @@
       });
     }
 
-    // Calcular derivada método corto con paso a paso (explicación simple)
+    // Método corto con pasos
     function derivadaCortaConPasos(expr) {
       try {
-        // Derivada simplificada
         const derivada = nerdamer(`diff(${expr}, x)`).expand();
 
-        // Paso a paso simplificado: separar términos y derivar cada uno
-        // nerdamer no tiene función directa para obtener pasos, hacemos aproximación:
-        // Dividimos por suma/resta términos básicos
-        const exprObj = nerdamer(expr);
         const sumas = expr.split(/(?=[+-])/).map(s => s.trim()).filter(s => s !== '');
         let pasos = '';
 
         sumas.forEach((termino, i) => {
           try {
             const derivTermino = nerdamer(`diff(${termino}, x)`).expand().text();
-            pasos += `<div class="step"><span class="term">Derivar término ${i + 1}:</span> \\(${termino}\\) → \\(${derivTermino}\\)</div>`;
+            pasos += `<div class="step"><span class="term">Derivar término ${i + 1}:</span> \\(${termino}\\) &rarr; \\(${derivTermino}\\)</div>`;
           } catch {
-            pasos += `<div class="step"><span class="term">Derivar término ${i + 1}:</span> \\(${termino}\\) → Error</div>`;
+            pasos += `<div class="step"><span class="term">Derivar término ${i + 1}:</span> \\(${termino}\\) &rarr; Error</div>`;
           }
         });
 
@@ -219,33 +224,65 @@
       }
     }
 
-    // Calcular derivada por definición con paso a paso
-    function derivadaPorDefinicion(expr) {
+    // Método largo con pasos y explicación detallada con límite
+    function derivadaPorDefinicionDetallada(expr) {
       try {
         const f_x = nerdamer(expr);
-        const f_xh = nerdamer(expr.replace(/x/g, '(x+h)')).expand();
+        const f_xh_expr = expr.replace(/x/g, '(x+h)');
+        const f_xh = nerdamer(f_xh_expr).expand();
         const diferencia = nerdamer(`(${f_xh.text()}) - (${f_x.text()})`).expand();
         const cociente = nerdamer(`(${diferencia.text()}) / h`).expand();
-        const limite = nerdamer(`limit((${cociente.text()}), h, 0)`);
 
-        const pasosTexto = [
-          `f(x) = ${f_x.text()}`,
-          `f(x+h) = ${f_xh.text()}`,
-          `f(x+h) - f(x) = ${diferencia.text()}`,
-          `[f(x+h) - f(x)] / h = ${cociente.text()}`,
-          `Límite cuando h → 0 = ${limite.text()}`
-        ].map(p => `<div class="step">${p}</div>`).join('');
+        // Límite no siempre funciona bien, pero probamos
+        let limiteText;
+        try {
+          limiteText = nerdamer(`limit((${cociente.text()}), h, 0)`).text();
+        } catch {
+          limiteText = 'No se pudo calcular el límite automáticamente';
+        }
+
+        // Creamos pasos explicativos y en formato LaTeX para mostrar bien
+        const pasos = [
+          {
+            descripcion: 'Función original:',
+            formula: `f(x) = ${f_x.text()}`
+          },
+          {
+            descripcion: 'Función desplazada \( f(x+h) \):',
+            formula: `f(x+h) = ${f_xh.text()}`
+          },
+          {
+            descripcion: 'Diferencia \( f(x+h) - f(x) \):',
+            formula: `${diferencia.text()}`
+          },
+          {
+            descripcion: 'Cociente \(\frac{f(x+h) - f(x)}{h}\):',
+            formula: `\\frac{${diferencia.text()}}{h}`
+          },
+          {
+            descripcion: 'Límite cuando \( h \\to 0 \):',
+            formula: limiteText
+          }
+        ];
+
+        // Construir html con pasos y render LaTeX con MathJax
+        let pasosHtml = '';
+        pasos.forEach(({ descripcion, formula }) => {
+          pasosHtml += `<div class="step">
+            <span class="term">${descripcion}</span>
+            <div class="formula">\\[${formula}\\]</div>
+          </div>`;
+        });
 
         return {
-          resultado: limite.text(),
-          pasosHtml: pasosTexto
+          resultado: limiteText,
+          pasosHtml: pasosHtml
         };
       } catch {
         return null;
       }
     }
 
-    // Al hacer click
     function calcular() {
       pasosDiv.innerHTML = '';
       resultadoDiv.textContent = '';
@@ -269,8 +306,8 @@
         resultadoDiv.textContent = 'Error al calcular derivada (método corto).';
       }
 
-      // Método largo (definición) con pasos
-      const def = derivadaPorDefinicion(expr);
+      // Método largo (definición) con pasos detallados y explicados
+      const def = derivadaPorDefinicionDetallada(expr);
       if (def) {
         pasosDiv.innerHTML = def.pasosHtml;
         MathJax.typesetPromise();
