@@ -56,7 +56,6 @@
   <div class="container">
     <h1>📐 Calculadora de Derivadas</h1>
     <input type="text" id="funcion" placeholder="Ej. x^2 + 3*x - 4" />
-    <input type="number" id="valorx" placeholder="Valor de x (ej. 2) - Opcional" />
     <br />
     <button onclick="resolverMetodoCorto()">Método corto</button>
     <button onclick="resolverMetodoLargo()">Método formal (límite)</button>
@@ -79,7 +78,7 @@
       try {
         math.parse(func);
         return true;
-      } catch (e) {
+      } catch {
         return false;
       }
     }
@@ -103,7 +102,6 @@
 
     function resolverMetodoLargo() {
       const funcion = document.getElementById("funcion").value.trim();
-      const valorxRaw = document.getElementById("valorx").value.trim();
       const output = document.getElementById("output");
       const steps = document.getElementById("mathSteps");
       output.innerHTML = '';
@@ -114,71 +112,33 @@
         return;
       }
 
-      const h = 0.000001;
-      let valorx = null;
-      if (valorxRaw !== '') {
-        valorx = parseFloat(valorxRaw);
-        if (isNaN(valorx)) {
-          output.textContent = "⚠️ El valor de x debe ser un número válido.";
-          return;
-        }
-      }
-
       try {
-        // Expresión con x+h para mostrar en LaTeX
+        // Definición del límite
+        const paso1 = `f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h}`;
+
+        // Expresión con (x+h)
         const funcionConXh = funcion.replace(/x/g, `(x + h)`);
         const f_x_latex = math.parse(funcion).toTex();
         const f_xh_latex = math.parse(funcionConXh).toTex();
 
-        // Paso 1: Definición límite
-        let paso1 = `f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h}`;
-
         // Paso 2: sustitución simbólica
-        let paso2 = `= \\lim_{h \\to 0} \\frac{${f_xh_latex} - ${f_x_latex}}{h}`;
+        const paso2 = `= \\lim_{h \\to 0} \\frac{${f_xh_latex} - ${f_x_latex}}{h}`;
+
+        // Derivada simbólica final
+        const derivadaSimbolica = math.derivative(funcion, 'x').toString();
+        const derivadaSimbolicaTex = math.parse(derivadaSimbolica).toTex();
 
         output.innerHTML = `\\[
           \\text{Función: } f(x) = ${f_x_latex}
         \\]`;
-
-        if (valorx === null) {
-          // Solo mostrar definición y sustitución simbólica (sin cálculo numérico)
-          steps.innerHTML = `\\[
-            \\text{Paso 1 – Definición formal:} \\\\
-            ${paso1} \\\\[10pt]
-            \\text{Paso 2 – Sustitución simbólica:} \\\\
-            ${paso2}
-          \\]`;
-          MathJax.typesetPromise();
-          return;
-        }
-
-        // Si hay valor numérico, hacer cálculo numérico y derivada simbólica
-
-        const f_x = math.evaluate(funcion, { x: valorx });
-        const f_xh = math.evaluate(funcionConXh, { x: valorx, h: h });
-        const diferencia = (f_xh - f_x) / h;
-
-        const derivadaSimbolica = math.derivative(funcion, 'x').toString();
-        const derivadaSimbolicaTex = math.parse(derivadaSimbolica).toTex();
-        const valorDerivadaEnX = math.evaluate(derivadaSimbolica, { x: valorx });
-
-        let paso3 = `\\approx \\frac{f(${valorx} + h) - f(${valorx})}{h} = \\frac{${f_xh.toFixed(7)} - ${f_x.toFixed(7)}}{${h}} = ${diferencia.toFixed(7)}`;
-
-        let paso4 = `\\text{Derivada simbólica final: } f'(x) = ${derivadaSimbolicaTex}`;
-
-        let paso5 = `\\text{Valor numérico en } x=${valorx}: f'(${valorx}) = ${valorDerivadaEnX.toFixed(7)}`;
 
         steps.innerHTML = `\\[
           \\text{Paso 1 – Definición formal:} \\\\
           ${paso1} \\\\[10pt]
           \\text{Paso 2 – Sustitución simbólica:} \\\\
           ${paso2} \\\\[10pt]
-          \\text{Paso 3 – Cálculo numérico aproximado:} \\\\
-          ${paso3} \\\\[10pt]
-          \\text{Paso 4 – Derivada simbólica:} \\\\
-          ${paso4} \\\\[10pt]
-          \\text{Paso 5 – Valor numérico:} \\\\
-          ${paso5}
+          \\text{Resultado final:} \\\\
+          f'(x) = ${derivadaSimbolicaTex}
         \\]`;
 
         MathJax.typesetPromise();
