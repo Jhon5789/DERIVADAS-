@@ -1,215 +1,86 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <title>Calculadora de Derivadas</title>
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      margin: 40px;
-      background-color: #f7f9fc;
-      color: #333;
-    }
-    h1 {
-      text-align: center;
-      color: #003366;
-    }
-    input, button {
-      padding: 10px;
-      font-size: 16px;
-      margin: 5px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-    }
-    button {
-      background-color: #0052cc;
-      color: white;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #003d99;
-    }
-    #output, #mathSteps {
-      margin-top: 20px;
-      font-size: 18px;
-      background-color: #ffffff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      white-space: pre-wrap;
-    }
-    #plot {
-      width: 100%;
-      height: 400px;
-      margin-top: 30px;
-    }
-    .container {
-      max-width: 800px;
-      margin: auto;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>📐 Calculadora de Derivadas</h1>
-    <input type="text" id="funcion" placeholder="Ej. x^2 + 3*x - 4" />
-    <input type="number" id="valorx" placeholder="Valor de x (ej. 2)" />
-    <br />
-    <button onclick="resolverMetodoCorto()">Método corto</button>
-    <button onclick="resolverMetodoLargo()">Método formal (límite)</button>
-    <button onclick="graficar()">Mostrar gráfica</button>
+function resolverMetodoLargo() {
+  const funcion = document.getElementById("funcion").value.trim();
+  const valorxRaw = document.getElementById("valorx").value.trim();
+  const output = document.getElementById("output");
+  const steps = document.getElementById("mathSteps");
+  output.innerHTML = '';
+  steps.innerHTML = '';
 
-    <div id="output"></div>
-    <div id="mathSteps"></div>
-    <div id="plot"></div>
-  </div>
+  if (!validarFuncion(funcion)) {
+    output.textContent = "⚠️ Por favor, ingresa una función válida.";
+    return;
+  }
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.1/math.min.js"></script>
-  <script>
-    function mostrarLatex(latex, elemento) {
-      document.getElementById(elemento).innerHTML = `\\(${latex}\\)`;
+  const h = 0.000001;
+  let valorx = null;
+  if (valorxRaw !== '') {
+    valorx = parseFloat(valorxRaw);
+    if (isNaN(valorx)) {
+      output.textContent = "⚠️ El valor de x debe ser un número válido.";
+      return;
+    }
+  }
+
+  try {
+    // Expresión con x+h para mostrar en LaTeX
+    const funcionConXh = funcion.replace(/x/g, `(x + h)`);
+    const f_x_latex = math.parse(funcion).toTex();
+    const f_xh_latex = math.parse(funcionConXh).toTex();
+
+    // Paso 1: Definición límite
+    let paso1 = `f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h}`;
+
+    // Paso 2: sustitución simbólica
+    let paso2 = `= \\lim_{h \\to 0} \\frac{${f_xh_latex} - ${f_x_latex}}{h}`;
+
+    output.innerHTML = `\\[
+      \\text{Función: } f(x) = ${f_x_latex}
+    \\]`;
+
+    if (valorx === null) {
+      // Solo mostrar definición y sustitución simbólica (sin cálculo numérico)
+      steps.innerHTML = `\\[
+        \\text{Paso 1 – Definición formal:} \\\\
+        ${paso1} \\\\[10pt]
+        \\text{Paso 2 – Sustitución simbólica:} \\\\
+        ${paso2}
+      \\]`;
       MathJax.typesetPromise();
+      return;
     }
 
-    function validarFuncion(func) {
-      if (!func || func.trim() === '') return false;
-      try {
-        math.parse(func);
-        return true;
-      } catch (e) {
-        return false;
-      }
-    }
+    // Si hay valor numérico, hacer cálculo numérico y derivada simbólica
 
-    function derivar(func) {
-      return math.derivative(func, 'x').toString();
-    }
+    const f_x = math.evaluate(funcion, { x: valorx });
+    const f_xh = math.evaluate(funcionConXh, { x: valorx, h: h });
+    const diferencia = (f_xh - f_x) / h;
 
-    function resolverMetodoCorto() {
-      const funcion = document.getElementById("funcion").value.trim();
-      if (!validarFuncion(funcion)) {
-        document.getElementById("output").textContent = "⚠️ Ingresa una función válida.";
-        document.getElementById("mathSteps").innerHTML = "";
-        return;
-      }
-      const derivada = derivar(funcion);
-      mostrarLatex("f'(x) = " + math.parse(derivada).toTex(), "output");
-      document.getElementById("mathSteps").innerHTML = '';
-      document.getElementById("plot").innerHTML = '';
-    }
+    const derivadaSimbolica = math.derivative(funcion, 'x').toString();
+    const derivadaSimbolicaTex = math.parse(derivadaSimbolica).toTex();
+    const valorDerivadaEnX = math.evaluate(derivadaSimbolica, { x: valorx });
 
-    function resolverMetodoLargo() {
-      const funcion = document.getElementById("funcion").value.trim();
-      const valorxRaw = document.getElementById("valorx").value.trim();
-      const output = document.getElementById("output");
-      const steps = document.getElementById("mathSteps");
-      output.innerHTML = '';
-      steps.innerHTML = '';
+    let paso3 = `\\approx \\frac{f(${valorx} + h) - f(${valorx})}{h} = \\frac{${f_xh.toFixed(7)} - ${f_x.toFixed(7)}}{${h}} = ${diferencia.toFixed(7)}`;
 
-      if (!validarFuncion(funcion)) {
-        output.textContent = "⚠️ Por favor, ingresa una función válida.";
-        return;
-      }
-      if (valorxRaw === '') {
-        output.textContent = "⚠️ Ingresa un valor numérico para x.";
-        return;
-      }
-      const valorx = parseFloat(valorxRaw);
-      if (isNaN(valorx)) {
-        output.textContent = "⚠️ El valor de x debe ser un número válido.";
-        return;
-      }
+    let paso4 = `\\text{Derivada simbólica final: } f'(x) = ${derivadaSimbolicaTex}`;
 
-      const h = 0.000001;
+    let paso5 = `\\text{Valor numérico en } x=${valorx}: f'(${valorx}) = ${valorDerivadaEnX.toFixed(7)}`;
 
-      try {
-        // Evaluar f(x) y f(x+h)
-        const f_x = math.evaluate(funcion, { x: valorx });
-        // Crear expresión f(x+h) para mostrar en LaTeX (sustituyendo x por (x+h))
-        const funcionConXh = funcion.replace(/x/g, `(x + h)`);
-        const f_xh = math.evaluate(funcionConXh, { x: valorx, h: h });
+    steps.innerHTML = `\\[
+      \\text{Paso 1 – Definición formal:} \\\\
+      ${paso1} \\\\[10pt]
+      \\text{Paso 2 – Sustitución simbólica:} \\\\
+      ${paso2} \\\\[10pt]
+      \\text{Paso 3 – Cálculo numérico aproximado:} \\\\
+      ${paso3} \\\\[10pt]
+      \\text{Paso 4 – Derivada simbólica:} \\\\
+      ${paso4} \\\\[10pt]
+      \\text{Paso 5 – Valor numérico:} \\\\
+      ${paso5}
+    \\]`;
 
-        const diferencia = (f_xh - f_x) / h;
+    MathJax.typesetPromise();
 
-        // Convertir a LaTeX las expresiones con math.js
-        const f_xh_latex = math.parse(funcionConXh).toTex();
-        const f_x_latex = math.parse(funcion).toTex();
-
-        // Derivada simbólica
-        const derivadaSimbolica = math.derivative(funcion, 'x').toString();
-        const derivadaSimbolicaTex = math.parse(derivadaSimbolica).toTex();
-        const valorDerivadaEnX = math.evaluate(derivadaSimbolica, { x: valorx });
-
-        // Paso 1
-        let paso1 = `f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h}`;
-
-        // Paso 2
-        let paso2 = `= \\lim_{h \\to 0} \\frac{${f_xh_latex} - ${f_x_latex}}{h}`;
-
-        // Paso 3
-        let paso3 = `\\approx \\frac{f(${valorx} + h) - f(${valorx})}{h} = \\frac{${f_xh.toFixed(7)} - ${f_x.toFixed(7)}}{${h}} = ${diferencia.toFixed(7)}`;
-
-        // Paso 4
-        let paso4 = `\\text{Derivada simbólica final: } f'(x) = ${derivadaSimbolicaTex}`;
-
-        // Paso 5
-        let paso5 = `\\text{Valor numérico en } x=${valorx}: f'(${valorx}) = ${valorDerivadaEnX.toFixed(7)}`;
-
-        output.innerHTML = `\\[
-          \\text{Función: } f(x) = ${f_x_latex}
-        \\]`;
-
-        steps.innerHTML = `\\[
-          \\text{Paso 1 – Definición formal:} \\\\
-          ${paso1} \\\\[10pt]
-          \\text{Paso 2 – Sustitución simbólica:} \\\\
-          ${paso2} \\\\[10pt]
-          \\text{Paso 3 – Cálculo numérico aproximado:} \\\\
-          ${paso3} \\\\[10pt]
-          \\text{Paso 4 – Derivada simbólica:} \\\\
-          ${paso4} \\\\[10pt]
-          \\text{Paso 5 – Valor numérico:} \\\\
-          ${paso5}
-        \\]`;
-
-        MathJax.typesetPromise();
-
-      } catch (error) {
-        output.textContent = "⚠️ Error al evaluar la función. Verifica la expresión.";
-      }
-    }
-
-    function graficar() {
-      const funcion = document.getElementById("funcion").value.trim();
-      if (!validarFuncion(funcion)) {
-        document.getElementById("output").textContent = "⚠️ Ingresa una función válida para graficar.";
-        return;
-      }
-      const expr = math.compile(funcion);
-      let x = [], y = [];
-      for (let i = -10; i <= 10; i += 0.1) {
-        x.push(i);
-        try {
-          y.push(expr.evaluate({ x: i }));
-        } catch {
-          y.push(null);
-        }
-      }
-      Plotly.newPlot('plot', [{
-        x: x,
-        y: y,
-        type: 'scatter',
-        mode: 'lines',
-        name: 'f(x)'
-      }], {
-        title: 'Gráfica de la función',
-        xaxis: { title: 'x' },
-        yaxis: { title: 'f(x)' }
-      });
-    }
-  </script>
-</body>
-</html>
+  } catch (error) {
+    output.textContent = "⚠️ Error al evaluar la función. Verifica la expresión.";
+  }
+}
