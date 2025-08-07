@@ -107,7 +107,7 @@
   <h1>Calculadora Completa de Derivadas</h1>
   <section>
     <label for="funcion">Ingrese la función \(f(x)\):</label>
-    <textarea id="funcion" placeholder="Ejemplo: x^2 + sin(x)"></textarea>
+    <textarea id="funcion" placeholder="Ejemplo: 3*x^2 + sin(x)"></textarea>
     <button id="calcularBtn">Calcular Derivadas</button>
   </section>
   <section>
@@ -164,7 +164,7 @@
         sumas.forEach((termino, i) => {
           try {
             const derivTermino = nerdamer(`diff(${termino}, x)`).expand().text();
-            pasos += `<div class="step"><span class="term">Término ${i + 1}:</span> \\(${termino}\\) &rarr; \\(${derivTermino}\\)</div>`;
+            pasos += `<div class="step"><span class="term">Paso ${i + 1}: Término ${i + 1}:</span> \\(${termino}\\) &rarr; \\(${derivTermino}\\)</div>`;
           } catch {
             pasos += `<div class="step"><span class="term">Término ${i + 1}:</span> \\(${termino}\\) &rarr; Error</div>`;
           }
@@ -182,13 +182,15 @@
         const cociente = nerdamer(`(${diferencia.text()}) / h`).expand();
         let limiteText;
         try { limiteText = nerdamer(`limit((${cociente.text()}), h, 0)`).text(); } catch { limiteText = 'No se pudo calcular el límite'; }
+        
         let pasosHtml = `
-        <div class="step"><span class="term">Paso 1: Función original:</span><div class="formula">\\[f(x) = ${f_x.text()}\\]</div></div>
-        <div class="step"><span class="term">Paso 2: Evaluar \(f(x+h)\):</span><div class="formula">\\[f(x+h) = ${f_xh.text()}\\]</div></div>
-        <div class="step"><span class="term">Paso 3: Diferencia \(f(x+h) - f(x)\):</span><div class="formula">\\[f(x+h) - f(x) = ${diferencia.text()}\\]</div></div>
+        <div class="step"><span class="term">Paso 1: Definición formal:</span><div class="formula">\\[f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h}\\]</div></div>
+        <div class="step"><span class="term">Paso 2: Sustitución en la función:</span><div class="formula">\\[f(x+h) = ${f_xh.text()}\\]</div></div>
+        <div class="step"><span class="term">Paso 3: Diferencia:</span><div class="formula">\\[f(x+h) - f(x) = ${diferencia.text()}\\]</div></div>
         <div class="step"><span class="term">Paso 4: Cociente incremental:</span><div class="formula">\\[\\frac{f(x+h) - f(x)}{h} = ${cociente.text()}\\]</div></div>
-        <div class="step"><span class="term">Paso 5: Límite cuando \(h \to 0\):</span><div class="formula">\\[\\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h} = ${limiteText}\\]</div></div>
+        <div class="step"><span class="term">Paso 5: Aplicación del límite:</span><div class="formula">\\[\\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h} = ${limiteText}\\]</div></div>
         <div class="step"><span class="term">Resultado final:</span><div class="formula">\\[f'(x) = ${limiteText}\\]</div></div>`;
+        
         return { resultado: limiteText, pasosHtml };
       } catch { return null; }
     }
