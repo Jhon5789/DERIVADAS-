@@ -51,7 +51,6 @@
       border-radius: 15px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.08);
       color: #004d40;
-      white-space: normal;
     }
     #mathSteps {
       display: flex;
@@ -80,33 +79,18 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       background: white;
     }
-    @media (max-width: 480px) {
-      input, button {
-        width: 90%;
-        font-size: 16px;
-      }
-      #output, #mathSteps {
-        width: 90%;
-        padding: 15px 18px;
-      }
-      #plot {
-        width: 90%;
-      }
-    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>📐 Calculadora de Derivadas</h1>
-    <input type="text" id="funcion" placeholder="Ej. x^2 + 3*x - 4" />
-    <button onclick="resolverMetodoCorto()">Método corto</button>
-    <button onclick="resolverMetodoLargo()">Método formal (límite)</button>
-    <button onclick="graficar()">Mostrar gráfica</button>
+  <h1>📐 Calculadora de Derivadas</h1>
+  <input type="text" id="funcion" placeholder="Ej. x^2 + 3*x - 4" />
+  <button onclick="resolverMetodoCorto()">Método corto</button>
+  <button onclick="resolverMetodoLargo()">Método formal (límite)</button>
+  <button onclick="graficar()">Mostrar gráfica</button>
 
-    <div id="output"></div>
-    <div id="mathSteps"></div>
-    <div id="plot"></div>
-  </div>
+  <div id="output"></div>
+  <div id="mathSteps"></div>
+  <div id="plot"></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.1/math.min.js"></script>
   <script>
@@ -151,13 +135,6 @@
       `;
     }
 
-    // Función para crear la expresión que representa f(x+h)
-    function crearFuncionXMasH(funcion) {
-      // Reemplaza x por (x+h), tratando de evitar reemplazos dentro de variables más largas
-      // (se asume que la variable es x sola)
-      return funcion.replace(/\bx\b/g, "(x + h)");
-    }
-
     function resolverMetodoLargo() {
       const funcion = document.getElementById("funcion").value.trim();
       const output = document.getElementById("output");
@@ -171,40 +148,41 @@
       }
 
       try {
-        const f_x_latex = math.parse(funcion).toTex();
-        const funcionXh = crearFuncionXMasH(funcion);
-        const f_xh_latex = math.parse(funcionXh).toTex();
+        const f_x = math.parse(funcion).toTex();
+        const f_xh_expr = funcion.replace(/\bx\b/g, "(x+h)");
+        const f_xh_tex = math.parse(f_xh_expr).toTex();
 
-        // Paso 1: Definición formal
-        const paso1 = `f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h}`;
+        let pasosHTML = "";
+        pasosHTML += crearStep("Paso 1 – Definición formal:",
+          `f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h} \\\\ f'(x) = \\lim_{h \\to 0} \\frac{${f_xh_tex} - ${f_x}}{h}`
+        );
 
-        // Paso 2: Mostrar f(x+h) expandido si posible (si es un binomio cuadrado, intenta expandir)
-        // Math.js no tiene expand pero intentamos parsear y hacer expand manual con reglas simples
-        // Por simplicidad aquí solo mostramos f(x+h) sin expandir automáticamente
-        const paso2 = `f(x+h) = ${f_xh_latex}`;
+        // Intentar expansión y simplificación
+        try {
+          const expanded = math.simplify(f_xh_expr).toTex();
+          const resta = math.simplify(`(${f_xh_expr}) - (${funcion})`).toTex();
+          const division = math.simplify(`((${f_xh_expr}) - (${funcion}))/h`).toTex();
+          const simplificado = math.simplify(division).toTex();
 
-        // Paso 3: Sustituir en el límite
-        const paso3 = `\\lim_{h \\to 0} \\frac{${f_xh_latex} - ${f_x_latex}}{h}`;
+          pasosHTML += crearStep("Paso 2 – Desarrollo y simplificación:",
+            `(x+h)^n \\text{ expandido: } ${expanded} \\\\ \\frac{${resta}}{h} = ${simplificado}`
+          );
 
-        // Paso 4: Mostrar que al simplificar se cancela y queda (no automático, mensaje genérico)
-        const paso4 = `\\text{Simplificando términos semejantes y cancelando } h, \\text{ queda:} \\\\ \\lim_{h \\to 0} (\\text{expresión simplificada})`;
+          pasosHTML += crearStep("Paso 3 – Aplicación del límite:",
+            `\\lim_{h \\to 0} ${simplificado} = ${math.parse(derivar(funcion)).toTex()}`
+          );
 
-        // Paso 5: Aplicar el límite h->0 y resultado final (derivada simbólica)
-        const derivadaSimbolica = derivar(funcion);
-        const derivadaSimbolicaTex = math.parse(derivadaSimbolica).toTex();
-        const paso5 = `f'(x) = ${derivadaSimbolicaTex}`;
+        } catch {
+          pasosHTML += crearStep("Paso 2 – Desarrollo:",
+            `\\text{No se pudo expandir automáticamente, se mantiene la forma general.}`
+          );
+          pasosHTML += crearStep("Paso 3 – Aplicación del límite:",
+            `f'(x) = ${math.parse(derivar(funcion)).toTex()}`
+          );
+        }
 
-        output.innerHTML = `\\[
-          \\text{Función: } f(x) = ${f_x_latex}
-        \\]`;
-
-        steps.innerHTML =
-          crearStep("Paso 1 – Definición formal:", paso1) +
-          crearStep("Paso 2 – Desarrollo de f(x+h):", paso2) +
-          crearStep("Paso 3 – Sustitución en el límite:", paso3) +
-          crearStep("Paso 4 – Simplificación:", paso4) +
-          crearStep("Paso 5 – Aplicar el límite y resultado:", paso5);
-
+        output.innerHTML = `\\[\\text{Función: } f(x) = ${f_x}\\]`;
+        steps.innerHTML = pasosHTML;
         MathJax.typesetPromise();
 
       } catch (error) {
