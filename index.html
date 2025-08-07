@@ -13,7 +13,8 @@
     h1, h2 { text-align: center; color: #0a47a1; }
     label { font-weight: 600; margin-bottom: 0.3rem; display: block; }
     textarea { width: 100%; height: 80px; font-size: 1.1rem; padding: 0.5rem; border-radius: 6px; border: 1px solid #ccc; margin-bottom: 1rem; font-family: Consolas, monospace; }
-    button { display: block; margin: 1rem auto 2rem; padding: 0.7rem 2.5rem; font-size: 1.1rem; background-color: #0a47a1; border: none; border-radius: 8px; color: white; cursor: pointer; }
+    button { display: block; margin: 1rem auto 2rem; padding: 0.7rem 2.5rem; font-size: 1.1rem; background-color: #0a47a1; border: none; border-radius: 8px; color: white; cursor: pointer; transition: background-color 0.3s; }
+    button:hover { background-color: #0a47a1cc; }
     section { background: white; border-radius: 10px; padding: 1rem 1.5rem; margin-bottom: 2rem; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
     .step { margin-bottom: 1rem; border-left: 4px solid #0a47a1; padding-left: 0.8rem; background: #e9f0ff; border-radius: 4px; }
     .term { font-weight: 600; color: #0a47a1; }
@@ -100,11 +101,12 @@
         let limiteText;
         try { limiteText = nerdamer(`limit((${cociente.text()}), h, 0)`).text(); } catch { limiteText = 'No se pudo calcular el límite'; }
         let pasosHtml = `
-        <div class="step"><span class="term">Paso 1: Función original:</span><div class="formula">\\[f(x) = ${f_x.text()}\\]<br>\\[\\lim_{h \to 0} f(x) = ${f_x.text()}\\]</div></div>
-        <div class="step"><span class="term">Paso 2: Evaluar f(x+h):</span><div class="formula">\\[f(x+h) = ${f_xh.text()}\\]<br>\\[\\lim_{h \to 0} f(x+h) = ${f_xh.text()}\\]</div></div>
-        <div class="step"><span class="term">Paso 3: Diferencia f(x+h) - f(x):</span><div class="formula">\\[f(x+h) - f(x) = ${diferencia.text()}\\]<br>\\[\\lim_{h \to 0} (f(x+h) - f(x)) = ${diferencia.text()}\\]</div></div>
-        <div class="step"><span class="term">Paso 4: Cociente incremental:</span><div class="formula">\\[\\frac{f(x+h) - f(x)}{h} = ${cociente.text()}\\]<br>\\[\\lim_{h \to 0} \\frac{f(x+h) - f(x)}{h} = ${limiteText}\\]</div></div>
-        <div class="step"><span class="term">Paso 5: Resultado final:</span><div class="formula">\\[f'(x) = ${limiteText}\\]</div></div>`;
+        <div class="step"><span class="term">Paso 1: Función original:</span><div class="formula">\\[f(x) = ${f_x.text()}\\]</div></div>
+        <div class="step"><span class="term">Paso 2: Evaluar \(f(x+h)\):</span><div class="formula">\\[f(x+h) = ${f_xh.text()}\\]</div></div>
+        <div class="step"><span class="term">Paso 3: Diferencia \(f(x+h) - f(x)\):</span><div class="formula">\\[f(x+h) - f(x) = ${diferencia.text()}\\]</div></div>
+        <div class="step"><span class="term">Paso 4: Cociente incremental:</span><div class="formula">\\[\\frac{f(x+h) - f(x)}{h} = ${cociente.text()}\\]</div></div>
+        <div class="step"><span class="term">Paso 5: Límite cuando \(h \to 0\):</span><div class="formula">\\[\\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h} = ${limiteText}\\]</div></div>
+        <div class="step"><span class="term">Resultado final:</span><div class="formula">\\[f'(x) = ${limiteText}\\]</div></div>`;
         return { resultado: limiteText, pasosHtml };
       } catch { return null; }
     }
