@@ -1,128 +1,144 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Calculadora de Derivadas - Método Formal</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora de Derivadas - Método Formal y Corto</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.3.1/math.js"></script>
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script id="MathJax-script" async
-    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
-  </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.0/math.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #f4f4f9;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
-      padding: 20px;
+      padding: 2rem;
+      background-color: #f4f4f4;
       color: #333;
     }
-    h1 {
-      text-align: center;
-      color: #222;
-    }
     .container {
-      max-width: 900px;
+      max-width: 800px;
       margin: auto;
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      background: #fff;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
     input {
-      padding: 10px;
-      font-size: 1em;
       width: 100%;
-      margin: 10px 0;
+      padding: 0.6rem;
+      margin: 0.5rem 0 1rem;
+      font-size: 1.1rem;
     }
     button {
-      padding: 10px 20px;
-      background-color: #005eff;
-      color: white;
+      padding: 0.6rem 1.2rem;
+      margin: 0.5rem;
+      font-size: 1rem;
       border: none;
       border-radius: 5px;
-      font-size: 1em;
+      background-color: #007bff;
+      color: white;
       cursor: pointer;
     }
     button:hover {
-      background-color: #003fcc;
+      background-color: #0056b3;
     }
-    #output {
-      margin-top: 20px;
-      font-size: 1.1em;
-      line-height: 1.6;
-    }
-    #plot {
-      margin-top: 40px;
+    .output {
+      margin-top: 1.5rem;
+      font-size: 1.2rem;
+      background-color: #f9f9f9;
+      padding: 1rem;
+      border-radius: 5px;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Calculadora de Derivadas</h1>
-    <p>Introduce una función:</p>
-    <input type="text" id="funcion" value="x^2" />
-    <button onclick="calcular()">Calcular derivada</button>
-
-    <div id="output"></div>
-    <div id="plot"></div>
+    <p>Ingresa una función en términos de <strong>x</strong> (por ejemplo: x^2 + 3*x)</p>
+    <input id="funcion" placeholder="f(x) = " />
+    <button onclick="mostrarMetodoCorto()">Método Corto</button>
+    <button onclick="mostrarMetodoLargo()">Método Largo (Formal)</button>
+    <button onclick="graficarFuncion()">Mostrar Gráfica</button>
+    
+    <div class="output" id="resultado"></div>
+    <div id="grafica" style="margin-top: 2rem;"></div>
   </div>
 
   <script>
-    function calcular() {
-      const fxInput = document.getElementById("funcion").value;
-      const output = document.getElementById("output");
-      const expr = math.parse(fxInput);
-      const fx = expr.toString({ parenthesis: "keep" });
-      const h = math.parse("h");
-      const x = math.parse("x");
+    function mostrarMetodoCorto() {
+      const input = document.getElementById("funcion").value;
+      const resultadoDiv = document.getElementById("resultado");
+      try {
+        const f = math.parse(input);
+        const df = math.derivative(f, 'x');
+        resultadoDiv.innerHTML = `Método corto:<br><br> \(f'(x) = ${df.toTex()}\)`;
+        MathJax.typeset();
+      } catch (e) {
+        resultadoDiv.innerHTML = `Error: ${e.message}`;
+      }
+    }
 
-      const fxh = math.simplify(
-        math.parse(fx.replace(/x/g, "(x+h)"))
-      ).toString();
+    function mostrarMetodoLargo() {
+      const input = document.getElementById("funcion").value;
+      const resultadoDiv = document.getElementById("resultado");
+      try {
+        const x = math.parse("x");
+        const h = math.parse("h");
+        const fx = math.parse(input);
+        const f_xh = fx.transform(node => {
+          return node.isSymbolNode && node.name === 'x' ? math.parse("(x+h)") : node;
+        });
 
-      const fx_orig = math.simplify(math.parse(fx)).toString();
-      const diff = math.simplify(`(${fxh}) - (${fx_orig})`);
-      const paso1 = `\\[ f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h} \\]`;
-      const paso2 = `\\[ = \\lim_{h \\to 0} \\frac{${fxh} - (${fx_orig})}{h} \\]`;
-      const paso3 = `\\[ = \\lim_{h \\to 0} \\frac{${diff}}{h} \\]`;
-      const paso4 = `\\[ = \\lim_{h \\to 0} ${math.simplify(diff + '/h')} \\]`;
-      const paso5 = `\\[ f'(x) = ${math.derivative(fx, 'x')} \\]`;
-      const paso6 = `\\text{Método corto: } f'(x) = ${math.derivative(fx, 'x').toString()}`;
+        const numerador = math.simplify(`(${f_xh.toString()}) - (${fx.toString()})`);
+        const fraccion = math.simplify(`(${numerador.toString()}) / h`);
 
-      output.innerHTML = paso1 + paso2 + paso3 + paso4 + paso5 + "<br>" + paso6;
-      MathJax.typeset();
+        resultadoDiv.innerHTML = `
+          Método largo (definición formal):<br><br>
+          \[ f'(x) = \lim_{h \to 0} \frac{f(x+h) - f(x)}{h} \]<br><br>
+          Paso 1: \( f(x+h) = ${f_xh.toTex()} \)<br>
+          Paso 2: \( f(x+h) - f(x) = ${numerador.toTex()} \)<br>
+          Paso 3: \( \frac{f(x+h) - f(x)}{h} = ${fraccion.toTex()} \)<br>
+          Paso 4: \( \lim_{h \to 0} = ${math.simplify(fraccion.toString().replace(/h/g, "0"))} \)
+        `;
+        MathJax.typeset();
+      } catch (e) {
+        resultadoDiv.innerHTML = `Error: ${e.message}`;
+      }
+    }
 
-      // Graficar función original y su derivada
-      const f = math.compile(fx);
-      const d = math.derivative(fx, 'x').compile();
+    function graficarFuncion() {
+      const input = document.getElementById("funcion").value;
+      try {
+        const expr = math.compile(input);
+        const deriv = math.derivative(input, 'x').compile();
+        const x_vals = math.range(-10, 10, 0.1).toArray();
+        const y_vals = x_vals.map(x => expr.evaluate({x}));
+        const y_deriv = x_vals.map(x => deriv.evaluate({x}));
 
-      const xs = math.range(-10, 10, 0.1).toArray();
-      const ys = xs.map(x => f.evaluate({ x }));
-      const dys = xs.map(x => d.evaluate({ x }));
+        const trace1 = {
+          x: x_vals,
+          y: y_vals,
+          mode: 'lines',
+          name: 'f(x)'
+        };
 
-      const trace1 = {
-        x: xs,
-        y: ys,
-        mode: "lines",
-        name: "f(x)",
-        line: { color: "blue" }
-      };
-      const trace2 = {
-        x: xs,
-        y: dys,
-        mode: "lines",
-        name: "f'(x)",
-        line: { color: "red" }
-      };
+        const trace2 = {
+          x: x_vals,
+          y: y_deriv,
+          mode: 'lines',
+          name: "f'(x)"
+        };
 
-      Plotly.newPlot("plot", [trace1, trace2], {
-        margin: { t: 0 },
-        title: "Función y su derivada",
-        xaxis: { title: "x" },
-        yaxis: { title: "y" }
-      });
+        Plotly.newPlot('grafica', [trace1, trace2], {
+          title: 'Gráfica de f(x) y su derivada',
+          xaxis: {title: 'x'},
+          yaxis: {title: 'y'},
+          responsive: true
+        });
+      } catch (e) {
+        document.getElementById("grafica").innerHTML = `Error al graficar: ${e.message}`;
+      }
     }
   </script>
 </body>
