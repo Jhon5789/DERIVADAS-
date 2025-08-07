@@ -151,35 +151,27 @@
         const f_x = math.parse(funcion).toTex();
         const f_xh_expr = funcion.replace(/\bx\b/g, "(x+h)");
         const f_xh_tex = math.parse(f_xh_expr).toTex();
+        const resta = math.simplify(`(${f_xh_expr}) - (${funcion})`).toTex();
+        const division = `\\frac{${resta}}{h}`;
+        const simplificado = math.simplify(`((${f_xh_expr}) - (${funcion}))/h`).toTex();
+        const derivadaFinal = math.parse(derivar(funcion)).toTex();
 
         let pasosHTML = "";
-        pasosHTML += crearStep("Paso 1 – Definición formal:",
-          `f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h} \\\\ f'(x) = \\lim_{h \\to 0} \\frac{${f_xh_tex} - ${f_x}}{h}`
+        pasosHTML += crearStep("Paso 1:",
+          `f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h}`
         );
-
-        // Intentar expansión y simplificación
-        try {
-          const expanded = math.simplify(f_xh_expr).toTex();
-          const resta = math.simplify(`(${f_xh_expr}) - (${funcion})`).toTex();
-          const division = math.simplify(`((${f_xh_expr}) - (${funcion}))/h`).toTex();
-          const simplificado = math.simplify(division).toTex();
-
-          pasosHTML += crearStep("Paso 2 – Desarrollo y simplificación:",
-            `(x+h)^n \\text{ expandido: } ${expanded} \\\\ \\frac{${resta}}{h} = ${simplificado}`
-          );
-
-          pasosHTML += crearStep("Paso 3 – Aplicación del límite:",
-            `\\lim_{h \\to 0} ${simplificado} = ${math.parse(derivar(funcion)).toTex()}`
-          );
-
-        } catch {
-          pasosHTML += crearStep("Paso 2 – Desarrollo:",
-            `\\text{No se pudo expandir automáticamente, se mantiene la forma general.}`
-          );
-          pasosHTML += crearStep("Paso 3 – Aplicación del límite:",
-            `f'(x) = ${math.parse(derivar(funcion)).toTex()}`
-          );
-        }
+        pasosHTML += crearStep("Paso 2:",
+          `f'(x) = \\lim_{h \\to 0} \\frac{${f_xh_tex} - ${f_x}}{h}`
+        );
+        pasosHTML += crearStep("Paso 3:",
+          `f'(x) = \\lim_{h \\to 0} ${division}`
+        );
+        pasosHTML += crearStep("Paso 4:",
+          `f'(x) = \\lim_{h \\to 0} ${simplificado}`
+        );
+        pasosHTML += crearStep("Paso 5:",
+          `f'(x) = ${derivadaFinal}`
+        );
 
         output.innerHTML = `\\[\\text{Función: } f(x) = ${f_x}\\]`;
         steps.innerHTML = pasosHTML;
