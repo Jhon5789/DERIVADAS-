@@ -148,37 +148,79 @@
       }
 
       try {
-        const f_x = math.parse(funcion).toTex();
-        const f_xh_expr = funcion.replace(/\bx\b/g, "(x+h)");
-        const f_xh_tex = math.parse(f_xh_expr).toTex();
-        const resta = math.simplify(`(${f_xh_expr}) - (${funcion})`).toTex();
-        const division = `\\frac{${resta}}{h}`;
-        const simplificado = math.simplify(`((${f_xh_expr}) - (${funcion}))/h`).toTex();
-        const derivadaFinal = math.parse(derivar(funcion)).toTex();
+        // Expresiones básicas en LaTeX
+        const f_x_tex = math.parse(funcion).toTex();
 
-        let pasosHTML = "";
-        pasosHTML += crearStep("Paso 1:",
+        // Paso 1: Definición formal de la derivada
+        let pasosHTML = crearStep("Paso 1: Definición formal de la derivada",
           `f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h}`
         );
-        pasosHTML += crearStep("Paso 2:",
-          `f'(x) = \\lim_{h \\to 0} \\frac{${f_xh_tex} - ${f_x}}{h}`
-        );
-        pasosHTML += crearStep("Paso 3:",
-          `f'(x) = \\lim_{h \\to 0} ${division}`
-        );
-        pasosHTML += crearStep("Paso 4:",
-          `f'(x) = \\lim_{h \\to 0} ${simplificado}`
-        );
-        pasosHTML += crearStep("Paso 5:",
-          `f'(x) = ${derivadaFinal}`
+
+        // Construir f(x+h) reemplazando x por (x+h)
+        const f_xh_expr = funcion.replace(/\bx\b/g, "(x + h)");
+        const f_xh_tex = math.parse(f_xh_expr).toTex();
+
+        pasosHTML += crearStep("Paso 2: Sustituir \( f(x+h) \) y \( f(x) \)",
+          `f'(x) = \\lim_{h \\to 0} \\frac{${f_xh_tex} - ${f_x_tex}}{h}`
         );
 
-        output.innerHTML = `\\[\\text{Función: } f(x) = ${f_x}\\]`;
+        // Paso 3: Expresar el numerador (f(x+h) - f(x))
+        const numerador = `(${f_xh_expr}) - (${funcion})`;
+        const numerador_simplificado = math.simplify(numerador).toString();
+        const numerador_tex = math.parse(numerador).toTex();
+        const numerador_simplificado_tex = math.parse(numerador_simplificado).toTex();
+
+        pasosHTML += crearStep("Paso 3: Expresar y expandir el numerador",
+          `f(x+h) - f(x) = ${numerador_tex} = ${numerador_simplificado_tex}`
+        );
+
+        // Paso 4: Dividir el numerador por h
+        const division = `(${numerador_simplificado}) / h`;
+        const division_simplificada = math.simplify(division).toString();
+        const division_tex = math.parse(division).toTex();
+        const division_simplificada_tex = math.parse(division_simplificada).toTex();
+
+        pasosHTML += crearStep("Paso 4: Dividir entre \( h \) y simplificar",
+          `\\frac{f(x+h) - f(x)}{h} = ${division_tex} = ${division_simplificada_tex}`
+        );
+
+        // Paso 5: Aplicar el límite h -> 0
+        let limiteEvaluado;
+        try {
+          const exprLimite = math.parse(division_simplificada);
+          limiteEvaluado = exprLimite.evaluate({ h: 0 });
+        } catch {
+          limiteEvaluado = "No se pudo evaluar el límite directamente.";
+        }
+
+        let limite_tex;
+        if (typeof limiteEvaluado === "number") {
+          limite_tex = limiteEvaluado.toString();
+        } else {
+          try {
+            limite_tex = math.parse(limiteEvaluado.toString()).toTex();
+          } catch {
+            limite_tex = String(limiteEvaluado);
+          }
+        }
+
+        pasosHTML += crearStep("Paso 5: Evaluar el límite cuando \( h \\to 0 \)",
+          `f'(x) = \\lim_{h \\to 0} ${division_simplificada_tex} = ${limite_tex}`
+        );
+
+        // Derivada final verificada
+        const derivadaFinalTex = math.parse(derivar(funcion)).toTex();
+        pasosHTML += crearStep("Derivada final verificada",
+          `f'(x) = ${derivadaFinalTex}`
+        );
+
+        output.innerHTML = `\\[\\text{Función: } f(x) = ${f_x_tex}\\]`;
         steps.innerHTML = pasosHTML;
         MathJax.typesetPromise();
 
       } catch (error) {
         output.textContent = "⚠️ Error al evaluar la función. Verifica la expresión.";
+        console.error(error);
       }
     }
 
