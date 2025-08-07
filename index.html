@@ -90,6 +90,14 @@
       padding: 1rem;
       width: 100%;
     }
+    .proceso {
+      width: 100%;
+      margin-top: 2rem;
+    }
+    .proceso h3 {
+      color: #357ab8;
+      margin-bottom: 0.5rem;
+    }
     footer {
       text-align: center;
       color: #666;
@@ -109,20 +117,31 @@
   </header>
   <main>
     <label for="funcion">Ingrese la función \(f(x)\):</label>
-    <textarea id="funcion" placeholder="Ejemplo: 3*x^2 + sin(x) + sqrt(x)"></textarea>
-    
+    <textarea id="funcion" placeholder="Ejemplo: x^2"></textarea>
+
     <button id="calcularBtn">Calcular Derivadas</button>
-    
+
     <h2>Resultados</h2>
     <div id="resultado"></div>
-    <div id="pasos"></div>
+
+    <div class="proceso">
+      <h3>Proceso Largo (Definición Formal):</h3>
+      <div id="pasos"></div>
+    </div>
+
+    <div class="proceso">
+      <h3>Proceso Corto (Reglas de Derivación):</h3>
+      <div id="corto"></div>
+    </div>
+
     <canvas id="grafica"></canvas>
   </main>
   <footer>Calculadora creada con ❤️ usando Nerdamer y Chart.js</footer>
-  
+
   <script>
     const funcionInput = document.getElementById('funcion');
     const pasosDiv = document.getElementById('pasos');
+    const cortoDiv = document.getElementById('corto');
     const resultadoDiv = document.getElementById('resultado');
     const graficaCanvas = document.getElementById('grafica');
     const ctx = graficaCanvas.getContext('2d');
@@ -138,62 +157,43 @@
         const f_xh = nerdamer(f_xh_expr).expand();
         const diferencia = nerdamer(`(${f_xh.text()}) - (${f_x.text()})`).expand();
         const cociente = nerdamer(`(${diferencia.text()}) / h`).expand();
-        
-        // Calcular el límite
-        const limiteText = nerdamer(`limit((${cociente.text()}), h, 0)`).text();
-        
+        const limite = nerdamer(`limit((${cociente.text()}), h, 0)`).text();
+
         let pasosHtml = `
-        <div class="step"><strong>Paso 1: Definición formal:</strong><br>
-        \\[f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h}\\]</div>
-        <div class="step"><strong>Paso 2: Sustitución en la función:</strong><br>
-        \\[f(x+h) = ${f_xh.text()}\\]</div>
-        <div class="step"><strong>Paso 3: Diferencia:</strong><br>
-        \\[f(x+h) - f(x) = ${diferencia.text()}\\]</div>
-        <div class="step"><strong>Paso 4: Cociente incremental:</strong><br>
-        \\[\\frac{f(x+h) - f(x)}{h} = ${cociente.text()}\\]</div>
-        <div class="step"><strong>Paso 5: Aplicación del límite:</strong><br>
-        \\[\\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h} = ${limiteText}\\]</div>
-        <div class="step"><strong>Resultado final:</strong><br>
-        \\[f'(x) = ${limiteText}\\]</div>`;
-        
-        return { resultado: limiteText, pasosHtml };
+          <div class="step">\[f(x+h) = ${f_xh.text()}\]</div>
+          <div class="step">\[f(x+h) - f(x) = ${diferencia.text()}\]</div>
+          <div class="step">\[\frac{f(x+h) - f(x)}{h} = ${cociente.text()}\]</div>
+          <div class="step">\[\lim_{h \to 0} \frac{f(x+h) - f(x)}{h} = ${limite}\]</div>
+        `;
+
+        return { resultado: limite, pasosHtml };
       } catch (error) {
-        console.error(error);
         return null;
       }
     }
 
-    function derivadaPorMetodoCorto(expr) {
-      // Este método asume que la función es un polinomio simple para la demostración
-      if (expr === "(x+h)^2 - x^2") {
-        return {
-          resultado: "2*x",
-          pasosHtml: `
-          <div class="step"><strong>Paso 1: Definición formal:</strong><br>
-          \\[f(x) = \\lim_{h \\to 0} \\frac{(x+h)^2 - x^2}{h}\\]</div>
-          <div class="step"><strong>Paso 2: Desarrollo del binomio:</strong><br>
-          \\[(x+h)^2 = x^2 + 2xh + h^2\\]</div>
-          <div class="step"><strong>Sustituyendo:</strong><br>
-          \\[= \\lim_{h \\to 0} \\frac{x^2 + 2xh + h^2 - x^2}{h} = \\lim_{h \\to 0} \\frac{2xh + h^2}{h}\\]</div>
-          <div class="step"><strong>Paso 3: Cancelar términos:</strong><br>
-          \\[= \\lim_{h \\to 0} (2x + h)\\]</div>
-          <div class="step"><strong>Paso 4: Aplicar el límite:</strong><br>
-          \\[= 2x\\]</div>
-          <div class="step"><strong>Resultado final:</strong><br>
-          \\[f'(x) = 2x\\]</div>`
-        };
+    function derivadaMetodoCorto(expr) {
+      try {
+        const derivada = nerdamer(`diff(${expr}, x)`).text();
+        return `\[f'(x) = ${derivada}\]`;
+      } catch (e) {
+        return 'Error al calcular la derivada corta.';
       }
-      return null;
     }
 
     function graficar(funcion, derivada) {
       const xValues = [];
       const yValues = [];
       const yDerivadaValues = [];
-      for (let i = -10; i <= 10; i += 0.1) {
-        xValues.push(i);
-        yValues.push(nerdamer(funcion.replace(/x/g, i)).text());
-        yDerivadaValues.push(nerdamer(derivada.replace(/x/g, i)).text());
+      for (let i = -10; i <= 10; i += 0.5) {
+        try {
+          xValues.push(i);
+          yValues.push(eval(nerdamer(funcion.replace(/x/g, `(${i})`)).evaluate().text()));
+          yDerivadaValues.push(eval(nerdamer(derivada.replace(/x/g, `(${i})`)).evaluate().text()));
+        } catch (e) {
+          yValues.push(null);
+          yDerivadaValues.push(null);
+        }
       }
       new Chart(ctx, {
         type: 'line',
@@ -217,18 +217,8 @@
         options: {
           responsive: true,
           scales: {
-            x: {
-              title: {
-                display: true,
-                text: 'x',
-              },
-            },
-            y: {
-              title: {
-                display: true,
-                text: 'f(x) y f\'(x)',
-              },
-            },
+            x: { title: { display: true, text: 'x' } },
+            y: { title: { display: true, text: 'f(x) y f\'(x)' } },
           },
         },
       });
@@ -236,29 +226,26 @@
 
     function calcular() {
       pasosDiv.innerHTML = '';
-      resultadoDiv.textContent = '';
+      cortoDiv.innerHTML = '';
+      resultadoDiv.innerHTML = '';
       const input = funcionInput.value.trim();
       if (!input) return alert('Por favor ingresa una función.');
 
       const expr = normalizarEntrada(input);
-      const def = derivadaPorDefinicionDetallada(expr);
-      const corto = derivadaPorMetodoCorto(expr);
+      const largo = derivadaPorDefinicionDetallada(expr);
+      const corto = derivadaMetodoCorto(expr);
 
-      if (def) {
-        resultadoDiv.innerHTML = `
-          <p><strong>Derivada (Definición Formal):</strong> ${def.resultado}</p>`;
-        pasosDiv.innerHTML = def.pasosHtml;
-
-        // Graficar
-        graficar(expr, def.resultado);
-        MathJax.typesetPromise();
+      if (largo) {
+        resultadoDiv.innerHTML = `<p><strong>Derivada (Definición Formal):</strong> \( ${largo.resultado} \)</p>`;
+        pasosDiv.innerHTML = largo.pasosHtml;
+        graficar(expr, largo.resultado);
       }
 
       if (corto) {
-        resultadoDiv.innerHTML += `
-          <p><strong>Derivada (Método Corto):</strong> ${corto.resultado}</p>`;
-        pasosDiv.innerHTML += corto.pasosHtml;
+        cortoDiv.innerHTML = corto;
       }
+
+      MathJax.typesetPromise();
     }
 
     document.getElementById('calcularBtn').addEventListener('click', calcular);
