@@ -2,253 +2,128 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Calculadora de Derivadas - Método Largo y Corto</title>
-  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/nerdamer@1.1.13/all.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Calculadora de Derivadas - Método Formal</title>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.0/math.js"></script>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <style>
     body {
-      font-family: 'Arial', sans-serif;
-      background-color: #eef2f5;
-      color: #333;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f4f9;
       margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      padding: 20px;
+      color: #333;
     }
-    header {
-      background-color: #4a90e2;
-      width: 100%;
-      padding: 1.5rem;
+    h1 {
       text-align: center;
-      color: white;
-      font-size: 2rem;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      color: #222;
     }
-    main {
-      width: 90%;
+    .container {
       max-width: 900px;
-      margin: 2rem auto;
+      margin: auto;
       background: white;
+      padding: 30px;
       border-radius: 10px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-      padding: 2rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
-    h2 {
-      color: #4a90e2;
-      margin-top: 1.5rem;
-      border-bottom: 2px solid #4a90e2;
-      padding-bottom: 0.5rem;
-    }
-    label {
-      font-weight: bold;
-      margin-bottom: 0.5rem;
-      display: block;
+    input {
+      padding: 10px;
+      font-size: 1em;
       width: 100%;
-      text-align: left;
-    }
-    textarea {
-      width: 100%;
-      height: 80px;
-      font-size: 1.1rem;
-      padding: 0.5rem;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-      margin-bottom: 1rem;
-      transition: border-color 0.3s;
-    }
-    textarea:focus {
-      border-color: #4a90e2;
-      outline: none;
+      margin: 10px 0;
     }
     button {
-      background-color: #4a90e2;
+      padding: 10px 20px;
+      background-color: #005eff;
       color: white;
       border: none;
       border-radius: 5px;
-      padding: 0.8rem 1.5rem;
-      font-size: 1.1rem;
+      font-size: 1em;
       cursor: pointer;
-      transition: background-color 0.3s, transform 0.2s;
-      margin: 0.5rem;
     }
     button:hover {
-      background-color: #357ab8;
-      transform: scale(1.05);
+      background-color: #003fcc;
     }
-    .step {
-      margin-bottom: 1rem;
-      border-left: 4px solid #4a90e2;
-      padding-left: 0.8rem;
-      background: #e8f4fd;
-      border-radius: 4px;
-      padding: 1rem;
-      width: 100%;
+    #output {
+      margin-top: 20px;
+      font-size: 1.1em;
+      line-height: 1.6;
     }
-    .proceso {
-      width: 100%;
-      margin-top: 2rem;
-    }
-    .proceso h3 {
-      color: #357ab8;
-      margin-bottom: 0.5rem;
-    }
-    footer {
-      text-align: center;
-      color: #666;
-      font-size: 0.9rem;
-      margin-top: 3rem;
-    }
-    #grafica {
-      margin-top: 2rem;
-      width: 100%;
-      height: 400px;
+    #plot {
+      margin-top: 40px;
     }
   </style>
 </head>
 <body>
-  <header>
-    Calculadora de Derivadas - Método Largo y Corto
-  </header>
-  <main>
-    <label for="funcion">Ingrese la función \(f(x)\):</label>
-    <textarea id="funcion" placeholder="Ejemplo: x^2"></textarea>
+  <div class="container">
+    <h1>Calculadora de Derivadas</h1>
+    <p>Introduce una función:</p>
+    <input type="text" id="funcion" value="x^2" />
+    <button onclick="calcular()">Calcular derivada</button>
 
-    <button id="calcularBtn">Calcular Derivadas</button>
-
-    <h2>Resultados</h2>
-    <div id="resultado"></div>
-
-    <div class="proceso">
-      <h3>Proceso Largo (Definición Formal):</h3>
-      <div id="pasos"></div>
-    </div>
-
-    <div class="proceso">
-      <h3>Proceso Corto (Reglas de Derivación):</h3>
-      <div id="corto"></div>
-    </div>
-
-    <canvas id="grafica"></canvas>
-  </main>
-  <footer>Calculadora creada con ❤️ usando Nerdamer y Chart.js</footer>
+    <div id="output"></div>
+    <div id="plot"></div>
+  </div>
 
   <script>
-    const funcionInput = document.getElementById('funcion');
-    const pasosDiv = document.getElementById('pasos');
-    const cortoDiv = document.getElementById('corto');
-    const resultadoDiv = document.getElementById('resultado');
-    const graficaCanvas = document.getElementById('grafica');
-    const ctx = graficaCanvas.getContext('2d');
+    function calcular() {
+      const fxInput = document.getElementById("funcion").value;
+      const output = document.getElementById("output");
+      const expr = math.parse(fxInput);
+      const fx = expr.toString({ parenthesis: "keep" });
+      const h = math.parse("h");
+      const x = math.parse("x");
 
-    function normalizarEntrada(expr) {
-      return expr.replace(/ln/g, 'log').replace(/√/g, 'sqrt').replace(/(\d)([a-zA-Z])/g, '$1*$2').replace(/([a-zA-Z])(\d)/g, '$1*$2').replace(/--/g, '+');
-    }
+      const fxh = math.simplify(
+        math.parse(fx.replace(/x/g, "(x+h)"))
+      ).toString();
 
-    function derivadaPorDefinicionDetallada(expr) {
-      try {
-        const f_x = nerdamer(expr);
-        const f_xh_expr = expr.replace(/x/g, '(x+h)');
-        const f_xh = nerdamer(f_xh_expr).expand();
-        const diferencia = nerdamer(`(${f_xh.text()}) - (${f_x.text()})`).expand();
-        const cociente = nerdamer(`(${diferencia.text()}) / h`).expand();
-        const limite = nerdamer(`limit((${cociente.text()}), h, 0)`).text();
+      const fx_orig = math.simplify(math.parse(fx)).toString();
+      const diff = math.simplify(`(${fxh}) - (${fx_orig})`);
+      const paso1 = `\\[ f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h} \\]`;
+      const paso2 = `\\[ = \\lim_{h \\to 0} \\frac{${fxh} - (${fx_orig})}{h} \\]`;
+      const paso3 = `\\[ = \\lim_{h \\to 0} \\frac{${diff}}{h} \\]`;
+      const paso4 = `\\[ = \\lim_{h \\to 0} ${math.simplify(diff + '/h')} \\]`;
+      const paso5 = `\\[ f'(x) = ${math.derivative(fx, 'x')} \\]`;
+      const paso6 = `\\text{Método corto: } f'(x) = ${math.derivative(fx, 'x').toString()}`;
 
-        let pasosHtml = `
-          <div class="step">\[f(x+h) = ${f_xh.text()}\]</div>
-          <div class="step">\[f(x+h) - f(x) = ${diferencia.text()}\]</div>
-          <div class="step">\[\frac{f(x+h) - f(x)}{h} = ${cociente.text()}\]</div>
-          <div class="step">\[\lim_{h \to 0} \frac{f(x+h) - f(x)}{h} = ${limite}\]</div>
-        `;
+      output.innerHTML = paso1 + paso2 + paso3 + paso4 + paso5 + "<br>" + paso6;
+      MathJax.typeset();
 
-        return { resultado: limite, pasosHtml };
-      } catch (error) {
-        return null;
-      }
-    }
+      // Graficar función original y su derivada
+      const f = math.compile(fx);
+      const d = math.derivative(fx, 'x').compile();
 
-    function derivadaMetodoCorto(expr) {
-      try {
-        const derivada = nerdamer(`diff(${expr}, x)`).text();
-        return `\[f'(x) = ${derivada}\]`;
-      } catch (e) {
-        return 'Error al calcular la derivada corta.';
-      }
-    }
+      const xs = math.range(-10, 10, 0.1).toArray();
+      const ys = xs.map(x => f.evaluate({ x }));
+      const dys = xs.map(x => d.evaluate({ x }));
 
-    function graficar(funcion, derivada) {
-      const xValues = [];
-      const yValues = [];
-      const yDerivadaValues = [];
-      for (let i = -10; i <= 10; i += 0.5) {
-        try {
-          xValues.push(i);
-          yValues.push(eval(nerdamer(funcion.replace(/x/g, `(${i})`)).evaluate().text()));
-          yDerivadaValues.push(eval(nerdamer(derivada.replace(/x/g, `(${i})`)).evaluate().text()));
-        } catch (e) {
-          yValues.push(null);
-          yDerivadaValues.push(null);
-        }
-      }
-      new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: xValues,
-          datasets: [
-            {
-              label: 'f(x)',
-              data: yValues,
-              borderColor: 'blue',
-              fill: false,
-            },
-            {
-              label: "f'(x)",
-              data: yDerivadaValues,
-              borderColor: 'red',
-              fill: false,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          scales: {
-            x: { title: { display: true, text: 'x' } },
-            y: { title: { display: true, text: 'f(x) y f\'(x)' } },
-          },
-        },
+      const trace1 = {
+        x: xs,
+        y: ys,
+        mode: "lines",
+        name: "f(x)",
+        line: { color: "blue" }
+      };
+      const trace2 = {
+        x: xs,
+        y: dys,
+        mode: "lines",
+        name: "f'(x)",
+        line: { color: "red" }
+      };
+
+      Plotly.newPlot("plot", [trace1, trace2], {
+        margin: { t: 0 },
+        title: "Función y su derivada",
+        xaxis: { title: "x" },
+        yaxis: { title: "y" }
       });
     }
-
-    function calcular() {
-      pasosDiv.innerHTML = '';
-      cortoDiv.innerHTML = '';
-      resultadoDiv.innerHTML = '';
-      const input = funcionInput.value.trim();
-      if (!input) return alert('Por favor ingresa una función.');
-
-      const expr = normalizarEntrada(input);
-      const largo = derivadaPorDefinicionDetallada(expr);
-      const corto = derivadaMetodoCorto(expr);
-
-      if (largo) {
-        resultadoDiv.innerHTML = `<p><strong>Derivada (Definición Formal):</strong> \( ${largo.resultado} \)</p>`;
-        pasosDiv.innerHTML = largo.pasosHtml;
-        graficar(expr, largo.resultado);
-      }
-
-      if (corto) {
-        cortoDiv.innerHTML = corto;
-      }
-
-      MathJax.typesetPromise();
-    }
-
-    document.getElementById('calcularBtn').addEventListener('click', calcular);
   </script>
 </body>
 </html>
