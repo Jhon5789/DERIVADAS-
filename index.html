@@ -148,43 +148,72 @@
       }
 
       try {
-        // Expresiones básicas en LaTeX
         const f_x_tex = math.parse(funcion).toTex();
 
-        // Paso 1: Definición formal de la derivada
         let pasosHTML = crearStep("Paso 1: Definición formal de la derivada",
           `f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h}`
         );
 
-        // Construir f(x+h) reemplazando x por (x+h)
+        // Paso 2: Expresar f(x+h)
         const f_xh_expr = funcion.replace(/\bx\b/g, "(x + h)");
         const f_xh_tex = math.parse(f_xh_expr).toTex();
-
-        pasosHTML += crearStep("Paso 2: Sustituir \( f(x+h) \) y \( f(x) \)",
-          `f'(x) = \\lim_{h \\to 0} \\frac{${f_xh_tex} - ${f_x_tex}}{h}`
+        pasosHTML += crearStep("Paso 2: Expresar \( f(x+h) \)",
+          `f(x+h) = ${f_xh_tex}`
         );
 
-        // Paso 3: Expresar el numerador (f(x+h) - f(x))
+        // Paso 3: Restar f(x)
+        pasosHTML += crearStep("Paso 3: Calcular \( f(x+h) - f(x) \)",
+          `f(x+h) - f(x) = ${f_xh_tex} - ${f_x_tex}`
+        );
+
+        // Paso 4: Expandir y simplificar el numerador (f(x+h) - f(x))
         const numerador = `(${f_xh_expr}) - (${funcion})`;
-        const numerador_simplificado = math.simplify(numerador).toString();
-        const numerador_tex = math.parse(numerador).toTex();
+        const numerador_exp = math.expand(numerador).toString(); // expandir productos, potencias
+        const numerador_simplificado = math.simplify(numerador_exp).toString();
+
+        const numerador_exp_tex = math.parse(numerador_exp).toTex();
         const numerador_simplificado_tex = math.parse(numerador_simplificado).toTex();
 
-        pasosHTML += crearStep("Paso 3: Expresar y expandir el numerador",
-          `f(x+h) - f(x) = ${numerador_tex} = ${numerador_simplificado_tex}`
+        pasosHTML += crearStep("Paso 4: Expandir \( f(x+h) - f(x) \)",
+          `= ${numerador_exp_tex}`
+        );
+        pasosHTML += crearStep("Paso 5: Simplificar \( f(x+h) - f(x) \)",
+          `= ${numerador_simplificado_tex}`
         );
 
-        // Paso 4: Dividir el numerador por h
-        const division = `(${numerador_simplificado}) / h`;
-        const division_simplificada = math.simplify(division).toString();
-        const division_tex = math.parse(division).toTex();
+        // Paso 6: Factorizar el numerador para extraer h
+        let factor_h;
+        try {
+          factor_h = math.factor(numerador_simplificado, 'h').toString();
+        } catch {
+          factor_h = null;
+        }
+
+        if (factor_h) {
+          const factor_h_tex = math.parse(factor_h).toTex();
+          pasosHTML += crearStep("Paso 6: Factorizar \( h \) en el numerador",
+            `f(x+h) - f(x) = h \\cdot (${factor_h_tex})`
+          );
+        } else {
+          pasosHTML += crearStep("Paso 6: Factorización",
+            "No se pudo factorizar el término \( h \) explícitamente."
+          );
+        }
+
+        // Paso 7: Dividir entre h (simplificar la expresión)
+        let division_simplificada;
+        if (factor_h) {
+          division_simplificada = factor_h;
+        } else {
+          division_simplificada = math.simplify(`(${numerador_simplificado}) / h`).toString();
+        }
         const division_simplificada_tex = math.parse(division_simplificada).toTex();
 
-        pasosHTML += crearStep("Paso 4: Dividir entre \( h \) y simplificar",
-          `\\frac{f(x+h) - f(x)}{h} = ${division_tex} = ${division_simplificada_tex}`
+        pasosHTML += crearStep("Paso 7: Dividir entre \( h \)",
+          `\\frac{f(x+h) - f(x)}{h} = ${division_simplificada_tex}`
         );
 
-        // Paso 5: Aplicar el límite h -> 0
+        // Paso 8: Evaluar límite h->0
         let limiteEvaluado;
         try {
           const exprLimite = math.parse(division_simplificada);
@@ -204,7 +233,7 @@
           }
         }
 
-        pasosHTML += crearStep("Paso 5: Evaluar el límite cuando \( h \\to 0 \)",
+        pasosHTML += crearStep("Paso 8: Evaluar el límite cuando \( h \\to 0 \)",
           `f'(x) = \\lim_{h \\to 0} ${division_simplificada_tex} = ${limite_tex}`
         );
 
