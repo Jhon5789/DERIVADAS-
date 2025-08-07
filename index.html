@@ -3,28 +3,108 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Calculadora Completa de Derivadas Mejorada</title>
+  <title>Calculadora Completa de Derivadas</title>
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/nerdamer@1.1.13/all.min.js"></script>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <style>
-    body { font-family: 'Segoe UI', sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; background: #f9f9f9; color: #222; line-height: 1.5; }
-    h1, h2 { text-align: center; color: #0a47a1; }
-    label { font-weight: 600; margin-bottom: 0.3rem; display: block; }
-    textarea { width: 100%; height: 80px; font-size: 1.1rem; padding: 0.5rem; border-radius: 6px; border: 1px solid #ccc; margin-bottom: 1rem; font-family: Consolas, monospace; }
-    button { display: block; margin: 1rem auto 2rem; padding: 0.7rem 2.5rem; font-size: 1.1rem; background-color: #0a47a1; border: none; border-radius: 8px; color: white; cursor: pointer; transition: background-color 0.3s; }
-    button:hover { background-color: #0a47a1cc; }
-    section { background: white; border-radius: 10px; padding: 1rem 1.5rem; margin-bottom: 2rem; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-    .step { margin-bottom: 1rem; border-left: 4px solid #0a47a1; padding-left: 0.8rem; background: #e9f0ff; border-radius: 4px; }
-    .term { font-weight: 600; color: #0a47a1; }
-    .formula { margin-top: 0.2rem; font-style: italic; color: #444; }
-    #grafica { width: 100%; height: 400px; margin-top: 1rem; }
-    footer { text-align: center; color: #666; font-size: 0.9rem; margin-top: 3rem; margin-bottom: 1rem; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      max-width: 720px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      background: #f9f9f9;
+      color: #222;
+      line-height: 1.5;
+    }
+    h1, h2 {
+      text-align: center;
+      color: #0a47a1;
+    }
+    label {
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+      display: block;
+    }
+    textarea {
+      width: 100%;
+      height: 80px;
+      font-size: 1.1rem;
+      padding: 0.5rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      margin-bottom: 1rem;
+      font-family: Consolas, monospace;
+    }
+    button {
+      display: inline-block;
+      margin: 1rem auto;
+      padding: 0.7rem 2.5rem;
+      font-size: 1.1rem;
+      background-color: #0a47a1;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+    button:hover {
+      background-color: #0a47a1cc;
+      transform: scale(1.05);
+    }
+    section {
+      background: white;
+      border-radius: 10px;
+      padding: 1rem 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .step {
+      margin-bottom: 1rem;
+      border-left: 4px solid #0a47a1;
+      padding-left: 0.8rem;
+      background: #e9f0ff;
+      border-radius: 4px;
+    }
+    .term {
+      font-weight: 600;
+      color: #0a47a1;
+    }
+    .formula {
+      margin-top: 0.2rem;
+      font-style: italic;
+      color: #444;
+    }
+    #grafica {
+      width: 100%;
+      height: 400px;
+      margin-top: 1rem;
+    }
+    footer {
+      text-align: center;
+      color: #666;
+      font-size: 0.9rem;
+      margin-top: 3rem;
+      margin-bottom: 1rem;
+    }
+    .resultado-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .resultado {
+      width: 100%;
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #0a47a1;
+    }
   </style>
 </head>
 <body>
-  <h1>Calculadora Completa de Derivadas Mejorada</h1>
+  <h1>Calculadora Completa de Derivadas</h1>
   <section>
     <label for="funcion">Ingrese la función \(f(x)\):</label>
     <textarea id="funcion" placeholder="Ejemplo: x^2 + sin(x)"></textarea>
@@ -32,8 +112,10 @@
   </section>
   <section>
     <h2>Método corto</h2>
-    <div id="resultado"></div>
-    <div id="pasosCorto"></div>
+    <div class="resultado-container">
+      <div id="resultado" class="resultado"></div>
+      <div id="pasosCorto"></div>
+    </div>
   </section>
   <section>
     <h2>Método largo (definición)</h2>
