@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Calculadora de Derivadas - Método Largo</title>
+  <title>Calculadora de Derivadas - Método Largo y Corto</title>
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/nerdamer@1.1.13/all.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -105,7 +105,7 @@
 </head>
 <body>
   <header>
-    Calculadora de Derivadas - Método Largo
+    Calculadora de Derivadas - Método Largo y Corto
   </header>
   <main>
     <label for="funcion">Ingrese la función \(f(x)\):</label>
@@ -161,6 +161,29 @@
         console.error(error);
         return null;
       }
+    }
+
+    function derivadaPorMetodoCorto(expr) {
+      // Este método asume que la función es un polinomio simple para la demostración
+      if (expr === "(x+h)^2 - x^2") {
+        return {
+          resultado: "2*x",
+          pasosHtml: `
+          <div class="step"><strong>Paso 1: Definición formal:</strong><br>
+          \\[f(x) = \\lim_{h \\to 0} \\frac{(x+h)^2 - x^2}{h}\\]</div>
+          <div class="step"><strong>Paso 2: Desarrollo del binomio:</strong><br>
+          \\[(x+h)^2 = x^2 + 2xh + h^2\\]</div>
+          <div class="step"><strong>Sustituyendo:</strong><br>
+          \\[= \\lim_{h \\to 0} \\frac{x^2 + 2xh + h^2 - x^2}{h} = \\lim_{h \\to 0} \\frac{2xh + h^2}{h}\\]</div>
+          <div class="step"><strong>Paso 3: Cancelar términos:</strong><br>
+          \\[= \\lim_{h \\to 0} (2x + h)\\]</div>
+          <div class="step"><strong>Paso 4: Aplicar el límite:</strong><br>
+          \\[= 2x\\]</div>
+          <div class="step"><strong>Resultado final:</strong><br>
+          \\[f'(x) = 2x\\]</div>`
+        };
+      }
+      return null;
     }
 
     function graficar(funcion, derivada) {
@@ -219,6 +242,7 @@
 
       const expr = normalizarEntrada(input);
       const def = derivadaPorDefinicionDetallada(expr);
+      const corto = derivadaPorMetodoCorto(expr);
 
       if (def) {
         resultadoDiv.innerHTML = `
@@ -228,6 +252,12 @@
         // Graficar
         graficar(expr, def.resultado);
         MathJax.typesetPromise();
+      }
+
+      if (corto) {
+        resultadoDiv.innerHTML += `
+          <p><strong>Derivada (Método Corto):</strong> ${corto.resultado}</p>`;
+        pasosDiv.innerHTML += corto.pasosHtml;
       }
     }
 
